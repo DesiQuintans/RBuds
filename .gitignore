@@ -40,3 +40,4 @@ vignettes/*.pdf
 
 # Rproj files (so that each of us can have our own project settings)
 *.Rproj
+/*.Rproj
