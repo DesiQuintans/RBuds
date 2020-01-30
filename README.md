@@ -1,15 +1,16 @@
 # RBuds
+
 Collaborative TidyTuesdayR between pals
 
-#Future R Meetups
+## Future R Meetups
 
-2020
-30/01 - GitHub 2 - Pushed to the edge 
-06/02 - Writing functions
-13/02 - How to use list columns
-20/02 - Package development
-27/02 - Command line progams...... whats in the ****** shell ?!?!
-    
-    
-#Other future ideas
+
+- **2020-01-30** - GitHub 2 - Pushed to the edge 
+- **2020-02-06** - Writing functions
+- **2020-02-13** - Package development
+- **2020-02-20** - How to use list columns
+- **2020-02-27** - Command line progams...... whats in the ****** shell ?!?!
+
+
+## Other future ideas
 
