@@ -1,0 +1,107 @@
+---
+title: "Tidy Tuesday 2019-11-14"
+author: "Desi Quintans"
+date: "14/11/2019"
+output: pdf_document
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+librarian::shelf(thebioengineer/tidytuesdayR, tidyverse, DesiQuintans/desiderata,
+                 boot)
+```
+
+
+# Import dataset
+
+```{r}
+raw <- tt_load("2019-11-12")
+
+loc_raw <- 
+    raw$loc_cran_packages %>% 
+    rename(num_files = file, blank_lines = blank,
+           comment_lines = comment, code_lines = code, name = pkg_name) %>% 
+    glimpse()
+```
+
+
+# How do the languages break down?
+
+```{r}
+count(loc_raw, language) %>% 
+    arrange(desc(n)) %>% 
+    head(10)
+```
+
+
+# How many packages have more than one version listed?
+
+```{r}
+loc_raw %>% 
+    group_by(name) %>% 
+    filter(howmany(version) > 1)
+```
+
+
+# Are there packages that don't have comments in their R files?
+
+```{r}
+loc_raw %>% 
+    filter(language == "R" & comment_lines == 0) %>% 
+    pull(name) %>% 
+    howmany()
+```
+
+
+# How many lines of code, comments etc. does each language have?
+
+```{r}
+lang_total <- 
+    loc_raw %>% 
+    group_by(language) %>% 
+    summarise_if(is.numeric, sum) %>% 
+    # Let's only look at languages that make up the upper 75th %tile of files.
+    filter(num_files >= percentile(num_files, cuts = 0.75)) %>% 
+    arrange(desc(code_lines))
+
+lang_total %>% print(n = 99)
+```
+
+# How many meaningful lines of code do files in each language tend to have?
+
+```{r}
+mean_boot <- function(x, y) {
+    mean(x[y], na.rm = TRUE)
+}
+
+get_ci <- function(ci_obj, entry, index) {
+    pluck(ci_obj, entry, index) 
+}
+
+ploc_boot <- 
+    loc_raw %>% 
+    group_by(language) %>% 
+    filter(howmany(name) > 10) %>% 
+    summarise(boot = list(boot(code_lines, mean_boot, R = 1001))) %>% 
+    mutate(ci = map(boot, ~ boot.ci(..1, 0.95, "perc")),
+           ci_low = map_dbl(ci, get_ci, "percent", 4),
+           theta_star = map_dbl(ci, ~ ..1$t0),
+           ci_high = map_dbl(ci, get_ci, "percent", 5)) %>% 
+    select(-boot, -ci) %>% 
+    mutate(language = as.factor(language),
+           variation = ci_high - ci_low) 
+```
+
+```{r}
+ggplot(ploc_boot, aes(y = language)) +
+    geom_segment(aes(x = ci_low, xend = ci_high, yend = language)) +
+    geom_point(aes(x = theta_star)) +
+    scale_x_log10()
+    geom_line(aes())
+    geom_pointrange(aes(y = theta_star, ymin = ci_low, ymax = ci_high)) +
+    rotate_x_text()
+```
+

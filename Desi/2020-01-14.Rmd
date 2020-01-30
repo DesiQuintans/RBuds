@@ -1,0 +1,67 @@
+---
+title: '2020-01-14'
+author: "Desi Quintans"
+date: "16/01/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+librarian::shelf(thebioengineer/tidytuesdayR, tidyverse, DesiQuintans/desiderata,
+                 boot, janitor, lubridate)
+```
+
+## Import data
+
+```{r}
+raw <- tt_load("2020-01-14")
+
+raw
+
+raw_pass <- 
+    raw$passwords %>% 
+    glimpse()
+```
+
+
+## Explore the data
+
+```{r}
+hist(str_length(raw_pass$password))
+```
+
+
+## Convert time units for online crack time
+
+```{r}
+unique(raw_pass$time_unit)
+
+raw_pass %>% 
+    filter(is.na(time_unit)) %>% 
+    glimpse()
+
+pass <- 
+    raw_pass %>% 
+    drop_na(password)
+
+
+convert_time <- function(value, unit) {
+    value_conv <- 
+        case_when(unit == "months" ~ value * 4,  # 1 month to 4 weeks
+                  unit == "years"  ~ value * 52, # 1 year to 52 weeks
+                              TRUE ~ value)  # Other values pass to duration()
+    
+    unit_conv <- 
+        ifelse(unit %in% c("months", "years"), "weeks", unit)
+    
+    length_of_time <- duration(value_conv, unit_conv)
+    
+    return(as.numeric(length_of_time))  # In seconds
+}
+
+pass <- 
+    pass %>% 
+    mutate(online_crack_hr = convert_time(value, time_unit))
+```
+

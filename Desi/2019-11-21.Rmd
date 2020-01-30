@@ -1,0 +1,122 @@
+---
+title: "2019-11-21"
+author: "Desi Quintans"
+date: "21/11/2019"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+librarian::shelf(thebioengineer/tidytuesdayR, tidyverse, DesiQuintans/desiderata,
+                 boot, janitor)
+```
+
+## Import the data
+
+This dataset is for the New Zealand 2019 Bird of the Year poll.
+
+```{r import-data}
+raw <- tt_load("2019-11-19")
+
+bird_raw <- 
+    raw$nz_bird
+
+head(bird_raw, 10)
+```
+
+The voters are not identified, but they are ordered in the dataframe because all of them have 5 votes each. So I need to identify them uniquely. I also want to get the rank as a number so that it's easier to use.
+
+```{r id-voters}
+count(bird_raw, vote_rank)
+
+bird <- 
+    bird_raw %>% 
+    mutate(voter = rep(1:(length(vote_rank) / 5), 5) %>% sort()) %>% 
+    mutate(rank  = str_sub(vote_rank, -1) %>% as.integer()) %>% 
+    drop_na()
+
+head(bird, 15)
+```
+
+
+
+## Recreate the IRV voting results algorithm
+
+The voting is done by instant-runoff vote:
+
+> We have a new voting system to decide which bird will reign supreme and be crowned Bird of the Year 2019.
+
+> This year, voting is based on the instant runoff (IRV) voting system, which is similar to the system you might have seen in local elections. When you vote, you can rank up to five of your favourite birds, with #1 indicating your favourite bird, #2 indicating your second favourite bird, and so on. It’s no problem if you want to vote for less than five birds.
+
+> In the IRV voting system, the first preferences of all the votes cast are tallied in a first round of counting. If no bird has more than half of the votes, new rounds of counting are held until one bird has a majority.
+
+> In each of these rounds the bird with the lowest number of votes is eliminated and the next ranked choice of those who voted for that bird are added to the totals of the remaining birds.
+
+> This process continues until one bird has a majority of votes and is crowned Bird of the Year.
+
+
+So the algorithm is: 
+
+1. Tally all least-preferences.
+2. If no bird breaks 50% of votes, continue.
+3. Eliminate the bird with the lowest number of votes.
+4. The people who voted for that bird have their next preference counted.
+
+```{r voting-algorithm}
+vote_percentages <- function(df) {
+    df %>% 
+        group_by(voter) %>% 
+        filter(rank == min(rank)) %>% 
+        ungroup() %>% 
+        count(bird_breed) %>% 
+        adorn_percentages(denominator = "col") %>% 
+        arrange(n)
+}
+
+a_bird_has_won <- function(result) {
+    any(result$n > 0.50)
+}
+
+drop_least_votes <- function(initial, result) {
+    least_popular <- result[1,]$bird_breed
+    
+    initial %>% 
+        filter(bird_breed != least_popular)
+}
+
+instant_runoff_voting <- function(df) {
+    vote_result <- vote_percentages(df)
+    
+    if (a_bird_has_won(vote_result) == TRUE) {
+        return(vote_result)
+    } else {
+        drop_least_votes(df, vote_result) %>% 
+            instant_runoff_voting()
+    }
+}
+```
+
+```{r}
+instant_runoff_voting(bird)
+```
+
+```{r eval=FALSE}
+df <- bird
+iter_limit <- howmany(bird$bird_breed)
+iter_limit <- 82
+
+for (i in 1:iter_limit) {
+    vote_result <- vote_percentages(df)
+    
+    if (a_bird_has_won(vote_result) == TRUE | i == iter_limit) {
+        print(vote_result)
+        print(paste("Finished after", i, "iterations."))
+        break()
+    } else {
+        df <- drop_least_votes(df, vote_result)
+    }
+}
+    
+```
+
