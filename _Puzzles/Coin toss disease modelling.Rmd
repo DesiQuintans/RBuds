@@ -1,0 +1,51 @@
+---
+title: "Coin flip disease modelling"
+author: "Desi Quintans"
+date: "30/01/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+
+## The problem
+
+This one comes from a homework question that was posted to the /r/rstats subreddit:
+
+> R CODING FOR COIN TOSS NEED HELP
+> 
+> New to coding an urgently need help ASAP. Basically need to
+> create an rcode that shows how a virus is being spread. It must
+> be shown with the use of coin tossing. Initially 1 person had the
+> virus. If the coin is tossed and is heads, the initial person
+> spreads it to 1 person. If the coin is tails the initial spreads
+> it to 2 people. These people infected would be the 1st
+> generation. Now here is the problem, what code can continue its
+> function ( h=1, t=2) on the NEWLY INFECTED. As in if the first
+> toss was tails, two other people would be infected. How can I
+> continue the function on these two people? Tossing the coin again
+> for each person? Please help!!! I need up to "10generations"
+>
+> ---- GangStaWeiRd0, <https://www.reddit.com/r/rstats/comments/evx6f6/r_coding_for_coin_toss_need_help/>
+
+I think this is an interesting question because when you think about what the 
+question is asking for and how you will store it as a data structure, the data 
+structure is actually very simple. But by extending the data structure to store 
+more information as the program runs, you can get some really interesting output 
+that would be good for, say, network graphing.
+
+
+### Some tips
+
+Think about what data you need to keep track of, and how you will store those 
+data in memory.
+
+If this is your first time converting a word problem into code, then this is a
+chance to learn [pseudocoding](https://www.unf.edu/~broggio/cop2221/2221pseu.htm)
+as a planning and problem-solving technique.
+
+
+## Your solution below (remember to make your own copy of this file)
