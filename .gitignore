@@ -37,3 +37,6 @@ vignettes/*.pdf
 
 # R Environment Variables
 .Renviron
+
+# Rproj files (so that each of us can have our own project settings)
+*.Rproj
